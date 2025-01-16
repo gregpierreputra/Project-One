@@ -1,5 +1,6 @@
 # --- Imports ---
 # Env
+import os
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -7,20 +8,20 @@ load_dotenv()
 import streamlit as st
 
 # Functions
-import Transform_Functions
+import Transform_Functions, API_Functions
 
 # --- Session States ---
-st.session_state.data_loaded = 0
-st.session_state.data_connection_completed = 0
-st.session_state.chat_history = [
-    "Testing Purposes"
-]
+if "data_loaded" not in st.session_state:
+    st.session_state.data_loaded = 0
 
 # --- Streamlit - Frontend - Configs ---
-st.set_page_config(page_title="Financial Information",
-                   page_icon="📈")
-st.title("Financial Information")
-
+st.set_page_config(page_title="Project Stonks",
+                   page_icon="💰")
+st.title("💰 Project Stonks")
+st.markdown("""
+            Yet another project focused on stocks.
+            Primarily created to learn new technologies and their possible interactions.
+            """)
 
 # --- Streamlit - Frontend - Sidebar
 with st.sidebar:
@@ -50,6 +51,22 @@ with st.sidebar:
             st.success("Stock data has been loaded!")
         else:
             st.error("Data has not been loaded...")
-        
+
+
 # --- Key Functionalities ---
-st.markdown("This is the financial information page!")
+if "Stock_Dataframe" not in st.session_state:
+    st.markdown("Stock data has not been loaded yet...")
+else:
+    st.markdown("Successfully retrieved the stock data!")
+    st.markdown(f"### 📊 {st.session_state["Symbol"]} Chart")
+    st.markdown("The open, high, low, and close (OHLC) data for the specified stock")
+    st.plotly_chart(figure_or_data=Transform_Functions.ohlc_plotly_graph(st.session_state["Stock_Dataframe"]),
+                    theme="streamlit",
+                    key="Stock_OHLC_Chart")
+
+    st.markdown(f"### 📋 {st.session_state["Symbol"]} Table")
+    st.markdown("The full list of information for the specified stock")
+    st.dataframe(st.session_state["Stock_Dataframe"])
+
+    st.markdown(f"### 📰 {st.session_state["Symbol"]} News and Market Sentiment")
+    st.markdown("All related news and the current market sentiment related to the stock")

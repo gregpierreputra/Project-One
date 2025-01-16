@@ -5,6 +5,7 @@ load_dotenv()
 
 # Core
 import polars as pl
+import plotly.graph_objects as go
 
 # API Functions
 import API_Functions
@@ -64,3 +65,21 @@ def transform_json_to_dataframe(symbol: str = "AAPL",
 
     print(pl_dataframe_data)
     return pl_dataframe_data
+
+def ohlc_plotly_graph(dataframe: pl.DataFrame) -> go.Figure:
+    """
+    Create an open, high, low, and close (OHLC) graph figure using the Plotly library and the dataframe input argument.
+
+    Args:
+        dataframe: A polars dataframe containing the date, open, high, low, and close data
+    Returns:
+        An OHLC figure in Plotly Graph Object format
+    """
+    ohlc_graph_figure = go.Figure(data=go.Ohlc(
+        x=dataframe["timestamp"],
+        open=dataframe["open"],
+        high=dataframe["high"],
+        low=dataframe["low"],
+        close=dataframe["close"]))
+
+    return ohlc_graph_figure

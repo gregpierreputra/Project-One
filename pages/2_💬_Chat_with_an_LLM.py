@@ -6,9 +6,12 @@ load_dotenv()
 # Core
 import streamlit as st
 
+# Functions
+import Transform_Functions
+
 # --- Session States ---
-st.session_state.data_loaded = 0
-st.session_state.data_connection_completed = 0
+if "data_loaded" not in st.session_state:
+    st.session_state.data_loaded = 0
 st.session_state.chat_history = [
     "Testing Purposes"
 ]
@@ -16,7 +19,11 @@ st.session_state.chat_history = [
 # --- Streamlit - Frontend - Configs ---
 st.set_page_config(page_title="Chat with Mistral",
                    page_icon="💬")
-st.title("Chat with Mistral")
+st.title("💬 Chat with Mistral")
+st.markdown("""
+            Ask the infamous LLM a range of questions related to your queried stock data.
+            Keep in mind that you should load the data through the sidebar on the left.
+            """)
 
 
 # --- Streamlit - Frontend - Sidebar
@@ -47,6 +54,10 @@ with st.sidebar:
             st.success("Stock data has been loaded!")
         else:
             st.error("Data has not been loaded...")
-        
+
+
 # --- Key Functionalities ---
-st.markdown("This is the chat page!")
+if "Stock_Dataframe" not in st.session_state:
+    st.markdown("Stock data has not been loaded yet...")
+else:
+    st.markdown("Successfully retrieved the stock data, and this is the chat page!")
