@@ -19,7 +19,7 @@ if "data_loaded" not in st.session_state:
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
         AIMessage(content="Hello! I am a helpful chatbot here to answer any questions related to stocks. Keep in mind that this is not financial advice, and please do your own personal research before making any financial decisions.")
-        ]
+    ]
 
 # --- Streamlit - Frontend - Configs ---
 st.set_page_config(page_title="Chat with Mistral",
@@ -36,23 +36,26 @@ with st.sidebar:
     # --- Streamlit - Frontend - Data Loading Container ---
     with st.container():
         st.subheader("Stock Data Settings")
-        st.text_input("Stock Symbol", key="Symbol", max_chars=4, help="The ticker symbol for the stock. Enter a ticker symbol, e.g., AAPL for Apple, or AMZN for Amazon")
-        st.text_input("Timespan", key="Timespan", max_chars=7, help="The size of the time window. Enter values such as: second, minute, hour, day, week, month, quarter, year")
-        st.text_input("Timespan Multiplier", key="Timespan_Multiplier", max_chars=2, help="The size of the timespan multier. If set to 5 and timespan to hours, then 5-hour bars will be returned.Enter a value between 1 and 99, e.g., 10")
-        st.text_input("Start Date", key="Start_Date", max_chars=10, help="Start of the aggregate time window. Enter a date in YYYY-MM-DD format, e.g., 2024-01-01")
-        st.text_input("End Date", key="End_Date", max_chars=10, help="End of the aggregate time window. Enter a date in YYYY-MM-DD format, e.g., 2024-12-31")
+        with st.form(key="Stock_Data_Pull_Form"):
+            stock_symbol_input = st.text_input("Stock Symbol", key="Symbol", max_chars=4, help="The ticker symbol for the stock. Enter a ticker symbol, e.g., AAPL for Apple, or AMZN for Amazon")
+            timespan_input = st.text_input("Timespan", key="Timespan", max_chars=7, help="The size of the time window. Enter values such as: second, minute, hour, day, week, month, quarter, year")
+            timespan_multiplier_input = st.text_input("Timespan Multiplier", key="Timespan_Multiplier", max_chars=2, help="The size of the timespan multier. If set to 5 and timespan to hours, then 5-hour bars will be returned.Enter a value between 1 and 99, e.g., 10")
+            start_date_input = st.text_input("Start Date", key="Start_Date", max_chars=10, help="Start of the aggregate time window. Enter a date in YYYY-MM-DD format, e.g., 2024-01-01")
+            end_date_input = st.text_input("End Date", key="End_Date", max_chars=10, help="End of the aggregate time window. Enter a date in YYYY-MM-DD format, e.g., 2024-12-31")
 
-        if st.button("Connect to the API"):
-            with st.spinner("Attempting a connection to retrieve the data..."):
-                data_call = Transform_Functions.transform_json_to_dataframe(
-                    symbol=st.session_state["Symbol"],
-                    timespan=st.session_state["Timespan"],
-                    timespan_multiplier=st.session_state["Timespan_Multiplier"],
-                    from_date=st.session_state["Start_Date"],
-                    to_date=st.session_state["End_Date"])
-                
-                st.session_state["Stock_Dataframe"] = data_call
-                st.session_state.data_loaded = 1
+            submitted_stock_data_form = st.form_submit_button(label="Connect to the API")
+
+            if submitted_stock_data_form:
+                with st.spinner("Attempting a connection to retrieve the data..."):
+                    data_call, mean_open, standard_deviation_open, mean_close, standard_deviation_close = Transform_Functions.transform_json_to_dataframe(
+                        symbol=stock_symbol_input,
+                        timespan=timespan_input,
+                        timespan_multiplier=timespan_multiplier_input,
+                        from_date=start_date_input,
+                        to_date=end_date_input)
+                    
+                    st.session_state["Stock_Dataframe"] = data_call
+                    st.session_state.data_loaded = 1
 
         if st.session_state.data_loaded == 1:
             st.success("Stock data has been loaded!")

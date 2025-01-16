@@ -6,7 +6,7 @@ load_dotenv()
 # Core
 import os
 import requests
-import polars as pl
+import streamlit as st
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
@@ -16,6 +16,7 @@ from langchain_groq import ChatGroq
 
 # --- Polygon.io ---
 # --- Polygon - API - Function Data Retrieval ---
+@st.cache_data
 def retrieve_aggregate_data_for_stock(symbol: str,
                                       timespan: str,
                                       timespan_multiplier: str,
@@ -53,6 +54,7 @@ def retrieve_aggregate_data_for_stock(symbol: str,
 
 # --- Langchain and LLM ---
 # --- Langchain - API - Query a specific LLM with the data ---
+@st.cache_resource
 def query_llm_with_question():
     """
     Queries the LLM (ChatGroq API with Mixtral) with a hardcoded prompt template.

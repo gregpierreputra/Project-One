@@ -28,6 +28,8 @@ def transform_json_to_dataframe(symbol: str = "AAPL",
         - Renaming of the base columns from the API to a readable format
         - New column containing the literal value of the user-specified stock ticker symbol
 
+    Returns various details as the session state is not saved between page changes and one way for persistence is through the st.markdown() function
+
     Args:
         stock: The ticker symbol of the stock to download
         timespan: The size of the aggregate time window, e.g., day, minute, quarter, year
@@ -39,7 +41,11 @@ def transform_json_to_dataframe(symbol: str = "AAPL",
         limit: The total amount (in rows) of data before aggregation that the data will be limited to
 
     Returns:
-        The transformed stock data in a Polars DataFrame format
+        mean_open: The mean value of the "open" column
+        standard_deviation_open: The standard deviation value of the "open" column
+        mean_close: The mean value of the "close" column
+        standard_deviation_close: The standard deviation value of the "close" column
+        pl_dataframe_data: The transformed stock data in a Polars DataFrame format
     """
     json_data = API_Functions.retrieve_aggregate_data_for_stock(symbol, timespan, timespan_multiplier, from_date, to_date, adjusted, sort_order, limit)
     
@@ -62,7 +68,18 @@ def transform_json_to_dataframe(symbol: str = "AAPL",
                                      pl.col("n").alias("number_of_transactions_in_aggregate_window"),
                                      pl.col("vw").alias("volume_weighted_average_price")])
     
-    return pl_dataframe_data
+    # Create statistical aggregation for all columns 
+    mean_pl_dataframe_data = pl_dataframe_data.mean()
+    standard_deviation_pl_dataframe_data = pl_dataframe_data.std()
+    
+    # Extract column values with statistical significance
+    mean_open = mean_pl_dataframe_data.item(0, "open")
+    standard_deviation_open = standard_deviation_pl_dataframe_data.item(0, "open")
+
+    mean_close = mean_pl_dataframe_data.item(0, "close")
+    standard_deviation_close = standard_deviation_pl_dataframe_data.item(0, "close")
+
+    return pl_dataframe_data, mean_open, standard_deviation_open, mean_close, standard_deviation_close
 
 def ohlc_plotly_graph(dataframe: pl.DataFrame) -> go.Figure:
     """
