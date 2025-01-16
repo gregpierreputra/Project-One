@@ -61,25 +61,36 @@ def transform_json_to_dataframe(symbol: str = "AAPL",
                                      pl.col("v").alias("trading_volume"),
                                      pl.col("n").alias("number_of_transactions_in_aggregate_window"),
                                      pl.col("vw").alias("volume_weighted_average_price")])
-                                     
-
-    print(pl_dataframe_data)
+    
     return pl_dataframe_data
 
 def ohlc_plotly_graph(dataframe: pl.DataFrame) -> go.Figure:
     """
     Create an open, high, low, and close (OHLC) graph figure using the Plotly library and the dataframe input argument.
+    Also create the hovertext that will be attached to each datapoint in the figure.
 
     Args:
         dataframe: A polars dataframe containing the date, open, high, low, and close data
     Returns:
         An OHLC figure in Plotly Graph Object format
     """
+    # Text creation when hovering over individual datapoints in the graph
+    hovertext = []
+    for i in range(len(dataframe["timestamp"])):
+        hovertext.append(
+            f"Open: {str(round(dataframe["open"][i], 2))}" +
+            f"<br>High: {str(round(dataframe["high"][i], 2))}" +
+            f"<br>Low: {str(round(dataframe["low"][i], 2))}" + 
+            f"<br>Close: {str(round(dataframe["close"][i], 2))}")
+        
+    # OHLC graph figure initialization using the dataframe from the input
     ohlc_graph_figure = go.Figure(data=go.Ohlc(
         x=dataframe["timestamp"],
         open=dataframe["open"],
         high=dataframe["high"],
         low=dataframe["low"],
-        close=dataframe["close"]))
+        close=dataframe["close"],
+        text=hovertext,
+        hoverinfo="text"))
 
     return ohlc_graph_figure
