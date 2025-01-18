@@ -33,11 +33,11 @@ with st.sidebar:
     with st.container():
         st.subheader("Stock Data Settings")
         with st.form(key="Stock_Data_Pull_Form"):
-            stock_symbol_input = st.text_input("Stock Symbol", key="Symbol", max_chars=4, help="The ticker symbol for the stock. Enter a ticker symbol, e.g., AAPL for Apple, or AMZN for Amazon")
-            timespan_input = st.text_input("Timespan", key="Timespan", max_chars=7, help="The size of the time window. Enter values such as: second, minute, hour, day, week, month, quarter, year")
-            timespan_multiplier_input = st.text_input("Timespan Multiplier", key="Timespan_Multiplier", max_chars=2, help="The size of the timespan multier. If set to 5 and timespan to hours, then 5-hour bars will be returned.Enter a value between 1 and 99, e.g., 10")
-            start_date_input = st.text_input("Start Date", key="Start_Date", max_chars=10, help="Start of the aggregate time window. Enter a date in YYYY-MM-DD format, e.g., 2024-01-01")
-            end_date_input = st.text_input("End Date", key="End_Date", max_chars=10, help="End of the aggregate time window. Enter a date in YYYY-MM-DD format, e.g., 2024-12-31")
+            stock_symbol_input = str(st.text_input("Stock Symbol", key="Symbol", placeholder="AAPL", max_chars=4, help="The ticker symbol for the stock. Enter a ticker symbol, e.g., AAPL for Apple, or AMZN for Amazon")).upper()
+            timespan_input = st.text_input("Timespan", key="Timespan", placeholder="day", max_chars=7, help="The size of the time window. Enter values such as: second, minute, hour, day, week, month, quarter, year")
+            timespan_multiplier_input = st.text_input("Timespan Multiplier", placeholder="1", key="Timespan_Multiplier", max_chars=2, help="The size of the timespan multier. If set to 5 and timespan to hours, then 5-hour bars will be returned.Enter a value between 1 and 99, e.g., 10")
+            start_date_input = st.text_input("Start Date", key="Start_Date", placeholder="2024-01-01", max_chars=10, help="Start of the aggregate time window. Enter a date in YYYY-MM-DD format, e.g., 2024-01-01")
+            end_date_input = st.text_input("End Date", key="End_Date", placeholder="2024-12-31", max_chars=10, help="End of the aggregate time window. Enter a date in YYYY-MM-DD format, e.g., 2024-12-31")
 
             submitted_stock_data_form = st.form_submit_button(label="Connect to the API")
 
@@ -62,7 +62,7 @@ with st.sidebar:
 # --- Key Functionalities ---
 # --- Stock dataframe loaded/not loaded check ---
 if "Stock_Dataframe" not in st.session_state:
-    st.markdown("Stock data has not been loaded yet...")
+    st.markdown("**Stock data has not been loaded.**\n\n**Please load the stock data through the sidebar on the left**")
 else:
     st.markdown("Successfully retrieved the stock data, feel free to start asking questions!")
 
