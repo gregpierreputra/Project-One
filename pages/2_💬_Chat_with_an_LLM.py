@@ -10,7 +10,7 @@ import streamlit as st
 from langchain_core.messages import AIMessage, HumanMessage
 
 # Functions
-import Transform_Functions, API_Functions
+import Transformation_Functions, API_Functions
 
 # --- Session States ---
 if "data_loaded" not in st.session_state:
@@ -47,7 +47,7 @@ with st.sidebar:
 
             if submitted_stock_data_form:
                 with st.spinner("Attempting a connection to retrieve the data..."):
-                    data_call, mean_open, standard_deviation_open, mean_close, standard_deviation_close = Transform_Functions.transform_json_to_dataframe(
+                    data_call, mean_open, standard_deviation_open, mean_close, standard_deviation_close = Transformation_Functions.transform_json_to_dataframe(
                         symbol=stock_symbol_input,
                         timespan=timespan_input,
                         timespan_multiplier=timespan_multiplier_input,

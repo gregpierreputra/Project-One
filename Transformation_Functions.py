@@ -10,15 +10,15 @@ import plotly.graph_objects as go
 # API Functions
 import API_Functions
 
-# --- Pandas - ETL - JSON Conversion ---
-def transform_json_to_dataframe(symbol: str = "AAPL",
-                                timespan: str = "day",
-                                timespan_multiplier: str = "1",
-                                from_date: str = "2024-01-01",
-                                to_date: str = "2024-12-31",
-                                adjusted: str = "true",
-                                sort_order: str = "desc",
-                                limit: str = "10000") -> pl.DataFrame:
+# --- Pandas - ETL - JSON Conversion for Polygon Aggregate Bars API Data ---
+def transform_aggregate_stock_json_to_dataframe(symbol: str = "AAPL",
+                                                timespan: str = "day",
+                                                timespan_multiplier: str = "1",
+                                                from_date: str = "2024-01-01",
+                                                to_date: str = "2024-12-31",
+                                                adjusted: str = "true",
+                                                sort_order: str = "desc",
+                                                limit: str = "10000") -> pl.DataFrame:
     """
     Retrieves the stock data from the retrieve_aggregate_data_for_stock of the API_Functions.py file
 
@@ -50,14 +50,14 @@ def transform_json_to_dataframe(symbol: str = "AAPL",
     json_data = API_Functions.retrieve_aggregate_data_for_stock(symbol, timespan, timespan_multiplier, from_date, to_date, adjusted, sort_order, limit)
     
     # Conversion to Polars DataFrame for learning reasons
-    pl_dataframe_data = pl.DataFrame(json_data[f"results"], schema={"t":pl.Int64,
-                                     "o":pl.Float32,
-                                     "h":pl.Float32,
-                                     "l":pl.Float32,
-                                     "c":pl.Float32,
-                                     "n":pl.Int32,
-                                     "v":pl.Int32,
-                                     "vw":pl.Int32}) \
+    pl_dataframe_data = pl.DataFrame(json_data[f"results"], schema={"t":pl.UInt64,
+                                     "o":pl.Float64,
+                                     "h":pl.Float64,
+                                     "l":pl.Float64,
+                                     "c":pl.Float64,
+                                     "n":pl.Int64,
+                                     "v":pl.UInt64,
+                                     "vw":pl.UInt64}) \
                             .select([pl.lit(symbol).alias("stock_code"),
                                      pl.from_epoch(pl.col("t"), time_unit="ms").alias("timestamp"),
                                      pl.col("o").alias("open"),
@@ -73,6 +73,7 @@ def transform_json_to_dataframe(symbol: str = "AAPL",
     standard_deviation_pl_dataframe_data = pl_dataframe_data.std()
     
     # Extract column values with statistical significance
+    # TODO: Resolve the persistence error with session_state. Have to reload the API call to load this call. Think of a solution.
     mean_open = mean_pl_dataframe_data.item(0, "open")
     standard_deviation_open = standard_deviation_pl_dataframe_data.item(0, "open")
 
@@ -80,6 +81,42 @@ def transform_json_to_dataframe(symbol: str = "AAPL",
     standard_deviation_close = standard_deviation_pl_dataframe_data.item(0, "close")
 
     return pl_dataframe_data, mean_open, standard_deviation_open, mean_close, standard_deviation_close
+
+# --- Pandas - ETL - JSON Conversion for Polygon Ticker News API Data ---
+def transform_ticker_news_json_to_dataframe(symbol: str,
+                                            from_date: str,
+                                            to_date: str) -> pl.DataFrame:
+    """
+    Retrieves the ticker news data from the retrieve_news_for_stock of the API_Functions.py file
+
+    Performs several transformation tasks:
+        - Retrieving of key information from the results JSON object
+
+    As of now, details that are pulled and utilized are:
+        - title
+        - article_url
+        - author
+        - published_utc
+        - image_url
+        - description
+
+    Args:
+        symbol: The ticker symbol of the stock news articles that will be retrieved
+        from_date: The start date for the stock news articles that will be retrieved. Date entered here is inclusive.
+        to_date: The end date for the stock news articles that will be retrieved. Date entered here is inclusive.
+
+    Returns:
+        The information from the JSON object transformed into a Polars DataFrame object
+    """
+    json_data = API_Functions.retrieve_news_for_stock(symbol=symbol,
+                                                      from_date=from_date,
+                                                      to_date=to_date)
+    
+    # Conversion from JSON API Data to a Polars Dataframe for easier processing in frontend
+    # TODO: Extract the insights objects inside the Ticker News API. Nested JSON object structure from the API call.
+    pl_dataframe_data = pl.DataFrame(json_data[f"results"])
+
+    return pl_dataframe_data
 
 def ohlc_plotly_graph(dataframe: pl.DataFrame) -> go.Figure:
     """
