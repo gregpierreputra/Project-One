@@ -1,10 +1,6 @@
 # --- Imports ---
-# Env
-import os
-from dotenv import load_dotenv
-load_dotenv()
-
 # Core
+import os
 import streamlit as st
 import polars as pl
 

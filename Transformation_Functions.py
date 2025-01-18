@@ -1,8 +1,4 @@
 # --- Imports ---
-# Env
-from dotenv import load_dotenv
-load_dotenv()
-
 # Core
 import polars as pl
 import plotly.graph_objects as go

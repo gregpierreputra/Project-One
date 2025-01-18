@@ -1,8 +1,4 @@
 # --- Imports ---
-# Env
-from dotenv import load_dotenv
-load_dotenv()
-
 # Core
 import streamlit as st
 
