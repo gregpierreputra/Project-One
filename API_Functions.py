@@ -39,7 +39,7 @@ def retrieve_aggregate_data_for_stock(symbol: str,
         limit: The total amount (in rows) of data before aggregation that the data will be limited to
 
     Returns:
-        The stock data in JSON format with the data being stored within a value called "results"
+        The stock data in JSON format with the data being stored within a JSON object called "results"
         Metadata and status code is also sent as part of the API call
     """
     api_key = os.getenv("POLYGON_API_KEY")
@@ -47,6 +47,39 @@ def retrieve_aggregate_data_for_stock(symbol: str,
     # Call the Polygon Aggregate Data API to retrieve the data
     # Default to pre-defined if not selected by the user
     url_generator = f"https://api.polygon.io/v2/aggs/ticker/{symbol}/range/{timespan_multiplier}/{timespan}/{from_date}/{to_date}?adjusted={adjusted}&sort={sort_order}&limit={limit}&apiKey={api_key}"
+    data_request = requests.get(url_generator)
+    data = data_request.json()
+
+    return data
+
+# --- Polygon - API - News Data Retrieval ---
+@st.cache_data
+def retrieve_news_for_stock(symbol: str,
+                            from_date: str,
+                            to_date: str,
+                            sort_order: str = "desc",
+                            sort_column: str = "published_utc",
+                            article_limit: str = 10):
+    """
+    Calls the Polygon Ticker News API to retrieve relevant news articles for a user-specified stock based on a set of user-specified settings.
+
+    Args:
+        symbol: The ticker symbol of the stock news articles that will be retrieved
+        from_date: The start date for the stock news articles that will be retrieved. Date entered here is inclusive.
+        to_date: The end date for the stock news articles that will be retrieved. Date entered here is inclusive.
+        sort_order: The sorting order that will be used to sort the news articles pulled from the API. Possible values are "asc", "desc". Used in conjunction with the sort_column variable 
+        sort_column: The column that will be used to sort the news articles pulled from the API. E.g., published_utc, ticker (if pulling data for multiple stock tickers)
+        article_limit: The total number of news articles that will be pulled from the API
+
+    Returns:
+        The news articles for the queried stock data between the from_date and to_date in JSON format with the data being stored within a JSON object called "results"
+        Metadata and status code is also sent as part of the API call
+    """
+    api_key = os.getenv("POLYGON_API_KEY")
+
+    # Call the Polygon Ticker News API with the user-specified settings
+    # No pre-defined state, should be defined based on the sent stock data settings form in the sidebar
+    url_generator = f"https://api.polygon.io/v2/reference/news?ticker={symbol}&order={sort_order}&limit={article_limit}&sort={sort_column}&published_utc.gte={from_date}&published_utc.lte={to_date}&apiKey={api_key}"
     data_request = requests.get(url_generator)
     data = data_request.json()
 

@@ -6,9 +6,10 @@ load_dotenv()
 
 # Core
 import streamlit as st
+import polars as pl
 
 # Functions
-import Transform_Functions, API_Functions
+import Transformation_Functions, API_Functions
 
 # --- Session States ---
 if "data_loaded" not in st.session_state:
@@ -40,15 +41,18 @@ with st.sidebar:
 
             if submitted_stock_data_form:
                 with st.spinner("Attempting a connection to retrieve the data..."):
-                    data_call, mean_open, standard_deviation_open, mean_close, standard_deviation_close = Transform_Functions.transform_json_to_dataframe(
-                        symbol=stock_symbol_input,
-                        timespan=timespan_input,
-                        timespan_multiplier=timespan_multiplier_input,
-                        from_date=start_date_input,
-                        to_date=end_date_input)
-                    
-                    st.session_state["Stock_Dataframe"] = data_call
-                    st.session_state.data_loaded = 1
+                    try:
+                        data_call, mean_open, standard_deviation_open, mean_close, standard_deviation_close = Transformation_Functions.transform_aggregate_stock_json_to_dataframe(
+                            symbol=stock_symbol_input,
+                            timespan=timespan_input,
+                            timespan_multiplier=timespan_multiplier_input,
+                            from_date=start_date_input,
+                            to_date=end_date_input)
+                        
+                        st.session_state["Stock_Dataframe"] = data_call
+                        st.session_state.data_loaded = 1
+                    except KeyError as StockDataCallError:
+                        st.error("You have entered stock data that does not exist. **Please enter a ticker symbol for stocks traded in the US, with a realistic set of settings.**\n\n**Also please refer to the question mark symbols for example data that can be entered.**")
 
         if st.session_state.data_loaded == 1:
             st.success("Stock data has been loaded!")
@@ -60,19 +64,28 @@ with st.sidebar:
 if "Stock_Dataframe" not in st.session_state:
     st.markdown("**Stock data has not been loaded yet...**")
 else:
-
     st.markdown("**Successfully retrieved the stock data!**")
-    st.markdown("**Queried the data for Stock: {}, Start-Date: {}, End-Date: {}**"
-                .format(stock_symbol_input, start_date_input, end_date_input))
     st.markdown(f"### 📊 Chart")
     st.markdown("The open, high, low, and close (OHLC) data for the specified stock. You can zoom in on specific periods, and hover to see the data in detail.")
-    st.plotly_chart(figure_or_data=Transform_Functions.ohlc_plotly_graph(st.session_state["Stock_Dataframe"]),
+    st.plotly_chart(figure_or_data=Transformation_Functions.ohlc_plotly_graph(st.session_state["Stock_Dataframe"]),
                     theme="streamlit",
                     key="Stock_OHLC_Chart")
+    st.markdown("***")
 
     st.markdown(f"### 📋 Table")
-    st.markdown("The full list of information for the specified stock")
+    st.markdown("Here is a list of the most relevant information for the stock that you queried. The information here cover OHLC data, trading volume, number of transactions in the aggregated window, and volume weighted average price")
     st.dataframe(st.session_state["Stock_Dataframe"])
+    st.markdown("***")
 
-    st.markdown(f"### 📰 News and Market Sentiment")
-    st.markdown("All related news and the current market sentiment related to the stock")
+    st.markdown(f"### 📰 News")
+    st.markdown("Here are some of the most interesting, and recent news articles in descending order using the end date related to the stock that you queried.")
+    stock_news_dataframe = Transformation_Functions.transform_ticker_news_json_to_dataframe(symbol=stock_symbol_input,
+                                                                                            from_date=start_date_input,
+                                                                                            to_date=end_date_input)
+    for article in range(len(stock_news_dataframe)):
+        with st.container(border=True):
+            st.markdown(f"**[{stock_news_dataframe.item(article, "title")}]({stock_news_dataframe.item(article, "article_url")})**")
+            st.markdown(f"*Published by **{stock_news_dataframe.item(article, "author")}** on {stock_news_dataframe.item(article, "published_utc")}*")
+            st.image(image=f"{stock_news_dataframe.item(article, "image_url")}",width=300)
+            st.markdown(f"{stock_news_dataframe.item(article, "description")}")
+    st.markdown("***")
