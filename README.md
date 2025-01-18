@@ -1,6 +1,9 @@
 # Project-Stonks
 A personal project to further my learning on several interesting technological spaces.
 
+This project is hosted live on: https://project-stonks-gregpierreputra.streamlit.app/
+Free to access it, and let me know what you think!
+
 Project Plan:
 - [x] Core: Stock querying through Polygon.io API, and DataFrame display
 - [x] Core: Stock charting through Plotly using the data stored in DataFrame
