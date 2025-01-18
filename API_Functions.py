@@ -1,8 +1,4 @@
 # --- Imports ---
-# Env
-from dotenv import load_dotenv
-load_dotenv()
-
 # Core
 import os
 import requests
@@ -42,7 +38,7 @@ def retrieve_aggregate_data_for_stock(symbol: str,
         The stock data in JSON format with the data being stored within a JSON object called "results"
         Metadata and status code is also sent as part of the API call
     """
-    api_key = os.getenv("POLYGON_API_KEY")
+    api_key = st.secrets.api_keys.POLYGON_API_KEY
 
     # Call the Polygon Aggregate Data API to retrieve the data
     # Default to pre-defined if not selected by the user
@@ -75,7 +71,7 @@ def retrieve_news_for_stock(symbol: str,
         The news articles for the queried stock data between the from_date and to_date in JSON format with the data being stored within a JSON object called "results"
         Metadata and status code is also sent as part of the API call
     """
-    api_key = os.getenv("POLYGON_API_KEY")
+    api_key = st.secrets.api_keys.POLYGON_API_KEY
 
     # Call the Polygon Ticker News API with the user-specified settings
     # No pre-defined state, should be defined based on the sent stock data settings form in the sidebar
@@ -115,7 +111,7 @@ def query_llm_with_question():
     # Initialize the prompt template, and the LLM model in Chat
     prompt = ChatPromptTemplate.from_template(prompt_template)
     llm = ChatGroq(
-        api_key=os.getenv("GROQ_API_KEY"),
+        api_key=st.secrets.api_keys.GROQ_API_KEY,
         model="mixtral-8x7b-32768")
     
     return (
