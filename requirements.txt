@@ -1,5 +1,6 @@
 streamlit
 polars>=1.20.0
+numpy
 plotly
 langchain-core>=0.3.30
 langchain-groq>=0.2.3

@@ -62,7 +62,7 @@ with st.sidebar:
 # --- Key Functionalities ---
 # --- Stock dataframe loaded/not loaded check ---
 if "Stock_Dataframe" not in st.session_state:
-    st.markdown("**Stock data has not been loaded.**\n\n**Please load the stock data through the sidebar on the left**")
+    st.markdown("**Stock data has not been loaded.**\n\n**Please load the stock data through the sidebar on the left.**")
 else:
     st.markdown("Successfully retrieved the stock data, feel free to start asking questions!")
 
