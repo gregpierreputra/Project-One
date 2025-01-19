@@ -38,7 +38,7 @@ with st.sidebar:
             if submitted_stock_data_form:
                 with st.spinner("Attempting a connection to retrieve the data..."):
                     try:
-                        data_call, mean_open, standard_deviation_open, mean_close, standard_deviation_close = Transformation_Functions.transform_aggregate_stock_json_to_dataframe(
+                        data_call = Transformation_Functions.transform_aggregate_stock_json_to_dataframe(
                             symbol=stock_symbol_input,
                             timespan=timespan_input,
                             timespan_multiplier=timespan_multiplier_input,
@@ -58,21 +58,31 @@ with st.sidebar:
 
 # --- Key Functionalities ---
 if "Stock_Dataframe" not in st.session_state:
-    st.markdown("**Stock data has not been loaded.**\n\n**Please load the stock data through the sidebar on the left**")
+    st.markdown("**Stock data has not been loaded.**\n\n**Please load the stock data through the sidebar on the left.**")
 else:
+    # --- Chart ---
     st.markdown("**Successfully retrieved the stock data!**")
     st.markdown(f"### 📊 Chart")
-    st.markdown("The open, high, low, and close (OHLC) data for the specified stock. You can zoom in on specific periods, and hover to see the data in detail.")
-    st.plotly_chart(figure_or_data=Transformation_Functions.ohlc_plotly_graph(st.session_state["Stock_Dataframe"]),
+    st.markdown("The open, high, low, and close (OHLC) data for the specified stock in a **candlestick chart**. You can zoom in on specific periods, and hover to see the data in detail.")
+    st.plotly_chart(figure_or_data=Transformation_Functions.candlestick_plotly_graph(st.session_state["Stock_Dataframe"]),
                     theme="streamlit",
-                    key="Stock_OHLC_Chart")
+                    key="Stock_Candlestick_Chart")
     st.markdown("***")
 
+    # --- Table ---
     st.markdown(f"### 📋 Table")
-    st.markdown("Here is a list of the most relevant information for the stock that you queried. The information here cover OHLC data, trading volume, number of transactions in the aggregated window, and volume weighted average price")
+    st.markdown("""
+                Here is a list of the most relevant information for the stock that you queried. The information here cover OHLC data, trading volume, number of transactions in the aggregated window, and volume weighted average price.
+                
+                **Technical indicators** are also included in this data, and they have the "ti_" prefix attached to them. The list of technical indicators are
+                - *Returns* over a given time period based on the *close* column
+                - *Volatility* over 5 time periods based on the *returns* column
+                - *Simple moving average* over 20 time periods based on the *close* column
+                """)
     st.dataframe(st.session_state["Stock_Dataframe"])
     st.markdown("***")
 
+    # --- News ---
     st.markdown(f"### 📰 News")
     st.markdown("Here are some of the most interesting, and recent news articles in descending order using the end date related to the stock that you queried.")
     stock_news_dataframe = Transformation_Functions.transform_ticker_news_json_to_dataframe(symbol=stock_symbol_input,

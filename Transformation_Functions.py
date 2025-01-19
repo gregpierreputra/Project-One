@@ -4,9 +4,9 @@ import polars as pl
 import plotly.graph_objects as go
 
 # API Functions
-import API_Functions
+import API_Functions, Technical_Indicators_Functions
 
-# --- Pandas - ETL - JSON Conversion for Polygon Aggregate Bars API Data ---
+# --- Polars - ETL - JSON Conversion for Polygon Aggregate Bars API Data ---
 def transform_aggregate_stock_json_to_dataframe(symbol: str = "AAPL",
                                                 timespan: str = "day",
                                                 timespan_multiplier: str = "1",
@@ -14,7 +14,7 @@ def transform_aggregate_stock_json_to_dataframe(symbol: str = "AAPL",
                                                 to_date: str = "2024-12-31",
                                                 adjusted: str = "true",
                                                 sort_order: str = "desc",
-                                                limit: str = "10000") -> pl.DataFrame:
+                                                limit: str = "50000") -> pl.DataFrame:
     """
     Retrieves the stock data from the retrieve_aggregate_data_for_stock of the API_Functions.py file
 
@@ -46,6 +46,7 @@ def transform_aggregate_stock_json_to_dataframe(symbol: str = "AAPL",
     json_data = API_Functions.retrieve_aggregate_data_for_stock(symbol, timespan, timespan_multiplier, from_date, to_date, adjusted, sort_order, limit)
     
     # Conversion to Polars DataFrame for learning reasons
+    # KEY: Sort the dataframe in ascending order for timestamp as the results will be used for generating technical indicators, and some are dependent on the data sequentially increasing by a time period
     pl_dataframe_data = pl.DataFrame(json_data[f"results"], schema={"t":pl.UInt64,
                                      "o":pl.Float64,
                                      "h":pl.Float64,
@@ -62,23 +63,39 @@ def transform_aggregate_stock_json_to_dataframe(symbol: str = "AAPL",
                                      pl.col("c").alias("close"),
                                      pl.col("v").alias("trading_volume"),
                                      pl.col("n").alias("number_of_transactions_in_aggregate_window"),
-                                     pl.col("vw").alias("volume_weighted_average_price")])
+                                     pl.col("vw").alias("volume_weighted_average_price")]) \
+                            .sort(by=pl.col("timestamp"),
+                                  descending=False)
     
-    # Create statistical aggregation for all columns 
-    mean_pl_dataframe_data = pl_dataframe_data.mean()
-    standard_deviation_pl_dataframe_data = pl_dataframe_data.std()
+    # --- Technical Indicators - Column Concatting ---
+    # Daily Return and Volatility
+    ti_daily_return_volatility = Technical_Indicators_Functions.ti_daily_return_and_volatility(pl_dataframe_data,
+                                                                                               time_period=5)
+
+    # Variable Simple Moving Average (SMA)
+    ti_variable_sma_column = Technical_Indicators_Functions.ti_variable_day_simple_moving_average(pl_dataframe_data,
+                                                                                                  time_period=20,
+                                                                                                  column_name="close")
+    
+    # --- Statistical Aggregations - Printing values in description of section ---
+    # mean_pl_dataframe_data = pl_dataframe_data.mean()
+    # standard_deviation_pl_dataframe_data = pl_dataframe_data.std()
     
     # Extract column values with statistical significance
     # TODO: Resolve the persistence error with session_state. Have to reload the API call to load this call. Think of a solution.
-    mean_open = mean_pl_dataframe_data.item(0, "open")
-    standard_deviation_open = standard_deviation_pl_dataframe_data.item(0, "open")
+    # mean_open = mean_pl_dataframe_data.item(0, "open")
+    # standard_deviation_open = standard_deviation_pl_dataframe_data.item(0, "open")
 
-    mean_close = mean_pl_dataframe_data.item(0, "close")
-    standard_deviation_close = standard_deviation_pl_dataframe_data.item(0, "close")
+    # mean_close = mean_pl_dataframe_data.item(0, "close")
+    # standard_deviation_close = standard_deviation_pl_dataframe_data.item(0, "close")
 
-    return pl_dataframe_data, mean_open, standard_deviation_open, mean_close, standard_deviation_close
+    # --- Final Polars Stock Dataframe with concatted technical indicator columns ---
+    final_pl_dataframe = pl.concat(items=[pl_dataframe_data, ti_daily_return_volatility, ti_variable_sma_column],
+                                   how="horizontal")
 
-# --- Pandas - ETL - JSON Conversion for Polygon Ticker News API Data ---
+    return final_pl_dataframe
+
+# --- Polars - ETL - JSON Conversion for Polygon Ticker News API Data ---
 def transform_ticker_news_json_to_dataframe(symbol: str,
                                             from_date: str,
                                             to_date: str) -> pl.DataFrame:
@@ -114,27 +131,29 @@ def transform_ticker_news_json_to_dataframe(symbol: str,
 
     return pl_dataframe_data
 
-def ohlc_plotly_graph(dataframe: pl.DataFrame) -> go.Figure:
+# --- Plotly - Figure Generation - Candlestick graph figure generation with Polars DataFrame
+def candlestick_plotly_graph(dataframe: pl.DataFrame) -> go.Figure:
     """
-    Create an open, high, low, and close (OHLC) graph figure using the Plotly library and the dataframe input argument.
+    Create a candlestick graph figure using the Plotly library and the dataframe input argument which should contain the open, high, low, and close (OHLC) data.
     Also create the hovertext that will be attached to each datapoint in the figure.
 
     Args:
-        dataframe: A polars dataframe containing the date, open, high, low, and close data
+        dataframe: A Polars dataframe containing the date, open, high, low, and close data
     Returns:
-        An OHLC figure in Plotly Graph Object format
+        A candlestick figure in Plotly Graph Object format
     """
     # Text creation when hovering over individual datapoints in the graph
     hovertext = []
     for i in range(len(dataframe["timestamp"])):
         hovertext.append(
-            f"Open: {str(round(dataframe["open"][i], 2))}" +
+            f"Period: {dataframe["timestamp"][i]}" +
+            f"<br>Open: {str(round(dataframe["open"][i], 2))}" +
             f"<br>High: {str(round(dataframe["high"][i], 2))}" +
             f"<br>Low: {str(round(dataframe["low"][i], 2))}" + 
             f"<br>Close: {str(round(dataframe["close"][i], 2))}")
         
-    # OHLC graph figure initialization using the dataframe from the input
-    ohlc_graph_figure = go.Figure(data=go.Ohlc(
+    # Candlestick graph figure initialization using the dataframe from the input
+    candlestick_graph_figure = go.Figure(data=go.Candlestick(
         x=dataframe["timestamp"],
         open=dataframe["open"],
         high=dataframe["high"],
@@ -142,5 +161,15 @@ def ohlc_plotly_graph(dataframe: pl.DataFrame) -> go.Figure:
         close=dataframe["close"],
         text=hovertext,
         hoverinfo="text"))
+    
+    candlestick_graph_figure.update_layout(
+        yaxis=dict(
+            title=dict(
+                text="Price ($)"
+            )),
+        xaxis=dict(
+            title=dict(
+                text="Time"))
+    )
 
-    return ohlc_graph_figure
+    return candlestick_graph_figure
