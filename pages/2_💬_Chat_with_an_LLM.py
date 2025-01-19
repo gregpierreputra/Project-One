@@ -64,33 +64,33 @@ with st.sidebar:
 if "Stock_Dataframe" not in st.session_state:
     st.markdown("**Stock data has not been loaded.**\n\n**Please load the stock data through the sidebar on the left.**")
 else:
-    st.markdown("Successfully retrieved the stock data, feel free to start asking questions!")
+    st.markdown("**Successfully retrieved the stock data**, feel free to start asking questions!")
 
-# --- Chat with LLM ---
-# Message display based on whether the message is from the user or from the LLM
-for message in st.session_state.chat_history:
-    if isinstance(message, AIMessage):
-        with st.chat_message("AI"):
-            st.markdown(message.content)
-    elif isinstance(message, HumanMessage):
+    # --- Chat with LLM ---
+    # Message display based on whether the message is from the user or from the LLM
+    for message in st.session_state.chat_history:
+        if isinstance(message, AIMessage):
+            with st.chat_message("AI"):
+                st.markdown(message.content)
+        elif isinstance(message, HumanMessage):
+            with st.chat_message("Human"):
+                st.markdown(message.content)
+
+    # Chat input initialization
+    user_message = st.chat_input(placeholder="Ask a question!",
+                                key="User_Chat_Message")
+
+    # Chat handling with the session history, and calls to the query_llm_with_question function
+    if user_message is not None and user_message.strip() != "":
+        st.session_state.chat_history.append(HumanMessage(content=user_message))
+
         with st.chat_message("Human"):
-            st.markdown(message.content)
+            st.markdown(user_message)
 
-# Chat input initialization
-user_message = st.chat_input(placeholder="Ask a question!",
-                             key="User_Chat_Message")
-
-# Chat handling with the session history, and calls to the query_llm_with_question function
-if user_message is not None and user_message.strip() != "":
-    st.session_state.chat_history.append(HumanMessage(content=user_message))
-
-    with st.chat_message("Human"):
-        st.markdown(user_message)
-
-    with st.chat_message("AI"):
-        response_init = API_Functions.query_llm_with_question()
-        response = response_init.invoke(input={"dataframe":st.session_state["Stock_Dataframe"],
-                                               "conversation_history":st.session_state.chat_history,
-                                               "user_question":user_message})
-        st.markdown(response)
-    st.session_state.chat_history.append(AIMessage(content=response))
+        with st.chat_message("AI"):
+            response_init = API_Functions.query_llm_with_question()
+            response = response_init.invoke(input={"dataframe":st.session_state["Stock_Dataframe"],
+                                                "conversation_history":st.session_state.chat_history,
+                                                "user_question":user_message})
+            st.markdown(response)
+        st.session_state.chat_history.append(AIMessage(content=response))
