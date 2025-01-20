@@ -3,7 +3,7 @@
 import polars as pl
 import plotly.graph_objects as go
 
-# API Functions
+# Functions
 import API_Functions, Technical_Indicators_Functions
 
 # --- Polars - ETL - JSON Conversion for Polygon Aggregate Bars API Data ---
@@ -23,6 +23,7 @@ def transform_aggregate_stock_json_to_dataframe(symbol: str = "AAPL",
         - Conversion of the timestamp column from unix to readable datetime
         - Renaming of the base columns from the API to a readable format
         - New column containing the literal value of the user-specified stock ticker symbol
+        - Generate technical indicators columns using functions from the Technical_Indicators_Functions.py file
 
     Returns various details as the session state is not saved between page changes and one way for persistence is through the st.markdown() function
 
