@@ -43,15 +43,18 @@ with st.sidebar:
 
             if submitted_stock_data_form:
                 with st.spinner("Attempting a connection to retrieve the data..."):
-                    data_call, mean_open, standard_deviation_open, mean_close, standard_deviation_close = Transformation_Functions.transform_json_to_dataframe(
-                        symbol=stock_symbol_input,
-                        timespan=timespan_input,
-                        timespan_multiplier=timespan_multiplier_input,
-                        from_date=start_date_input,
-                        to_date=end_date_input)
-                    
-                    st.session_state["Stock_Dataframe"] = data_call
-                    st.session_state.data_loaded = 1
+                    try:
+                        data_call = Transformation_Functions.transform_aggregate_stock_json_to_dataframe(
+                            symbol=stock_symbol_input,
+                            timespan=timespan_input,
+                            timespan_multiplier=timespan_multiplier_input,
+                            from_date=start_date_input,
+                            to_date=end_date_input)
+                        
+                        st.session_state["Stock_Dataframe"] = data_call
+                        st.session_state.data_loaded = 1
+                    except KeyError as StockDataCallError:
+                        st.error("**You have entered stock data that does not exist**. Please enter a ticker symbol for stocks traded in the US, with a realistic set of settings.\n\nAlso please refer to the question mark symbols for example data that can be entered.")
 
         if st.session_state.data_loaded == 1:
             st.success("Stock data has been loaded!")
@@ -64,7 +67,8 @@ with st.sidebar:
 if "Stock_Dataframe" not in st.session_state:
     st.markdown("**Stock data has not been loaded.**\n\n**Please load the stock data through the sidebar on the left.**")
 else:
-    st.markdown("**Successfully retrieved the stock data**, feel free to start asking questions!")
+    st.markdown("**Successfully retrieved the stock data!**")
+    st.markdown("Feel free to start asking questions!")
 
     # --- Chat with LLM ---
     # Message display based on whether the message is from the user or from the LLM

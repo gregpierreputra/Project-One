@@ -2,22 +2,21 @@
 # Core
 import os
 import streamlit as st
-import polars as pl
 
 # Functions
-import Transformation_Functions
+import Transformation_Functions, Backtrading_Functions
 
 # --- Session States ---
 if "data_loaded" not in st.session_state:
     st.session_state.data_loaded = 0
 
 # --- Streamlit - Frontend - Configs ---
-st.set_page_config(page_title="Project Stonks",
-                   page_icon="💰")
-st.title("💰 Project Stonks")
+st.set_page_config(page_title="Financial Modelling with Stock Data",
+                   page_icon="📈")
+st.title("📈 Financial Modelling")
 st.markdown("""
-            Yet another project focused on stocks.
-            Primarily created to learn new technologies and their possible interactions.
+            **This page is currently under construction** and will host the financial modelling functionality within it.
+            It will allow you to **utilize machine learning models** to predict a certain column's value at the next time period based on a selection of columns used as features. 
             """)
 
 # --- Streamlit - Frontend - Sidebar
@@ -62,36 +61,13 @@ if "Stock_Dataframe" not in st.session_state:
 else:
     # --- Chart ---
     st.markdown("**Successfully retrieved the stock data!**")
-    st.markdown(f"### 📊 Chart")
-    st.markdown("The open, high, low, and close (OHLC) data for the specified stock in a **candlestick chart**. You can zoom in on specific periods, and hover to see the data in detail.")
-    st.plotly_chart(figure_or_data=Transformation_Functions.candlestick_plotly_graph(st.session_state["Stock_Dataframe"]),
-                    theme="streamlit",
-                    key="Stock_Candlestick_Chart")
-    st.markdown("***")
+    st.markdown("However, the functionality for this page is still not available yet. Apologies.")
 
-    # --- Table ---
-    st.markdown(f"### 📋 Table")
-    st.markdown("""
-                Here is a list of the most relevant information for the stock that you queried. The information here cover OHLC data, trading volume, number of transactions in the aggregated window, and volume weighted average price.
-                
-                **Technical indicators** are also included in this data, and they have the "ti_" prefix attached to them. The list of technical indicators are
-                - *Returns* over a given time period based on the *close* column
-                - *Volatility* over 5 time periods based on the *returns* column
-                - *Simple moving average* over 20 time periods based on the *close* column
-                """)
-    st.dataframe(st.session_state["Stock_Dataframe"])
-    st.markdown("***")
-
-    # --- News ---
-    st.markdown(f"### 📰 News")
-    st.markdown("Here are some of the most interesting, and recent news articles in descending order using the end date related to the stock that you queried.")
-    stock_news_dataframe = Transformation_Functions.transform_ticker_news_json_to_dataframe(symbol=stock_symbol_input,
-                                                                                            from_date=start_date_input,
-                                                                                            to_date=end_date_input)
-    for article in range(len(stock_news_dataframe)):
-        with st.container(border=True):
-            st.markdown(f"**[{stock_news_dataframe.item(article, "title")}]({stock_news_dataframe.item(article, "article_url")})**")
-            st.markdown(f"*Published by **{stock_news_dataframe.item(article, "author")}** on {stock_news_dataframe.item(article, "published_utc")}*")
-            st.image(image=f"{stock_news_dataframe.item(article, "image_url")}",width=300)
-            st.markdown(f"{stock_news_dataframe.item(article, "description")}")
-    st.markdown("***")
+    # --- Benchmark - Buy and Sell Strategy ---
+    # TODO: Complete the backtrading functionality in the Backtrading_Functions.py file
+    # st.markdown("### Benchmark - Buy and Hold Strategy")
+    # st.markdown("""
+    #             The benchmark for any trading strategy will be buy and hold, where we buy the stock at the earliest possible time period with all our capital, and simply hold the stock in our portfolio.
+    #             By backtrading with this trading strategy, we can see how much returns would have been generated if implemented on the queried stock.
+    #             """)
+    # test_call = Backtrading_Functions.buy_and_hold_stock_trader_init(stock_dataframe=st.session_state["Stock_Dataframe"])
